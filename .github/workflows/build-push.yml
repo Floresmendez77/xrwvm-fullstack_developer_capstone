@@ -1,0 +1,32 @@
+name: Build and push image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build React frontend
+        working-directory: server/frontend
+        run: |
+          npm install
+          CI=false npm run build
+
+      - uses: docker/login-action@v3
+        with:
+          registry: us.icr.io
+          username: iamapikey
+          password: ${{ secrets.IBMCLOUD_API_KEY }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          push: true
+          tags: us.icr.io/sn-labs-andrewflores/dealership:latest
